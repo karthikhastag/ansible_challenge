@@ -15,12 +15,26 @@ pipeline {
             }
         }
 
+        stage('Install Ansible (Auto)') {
+            steps {
+                sh '''
+                  if ! command -v ansible >/dev/null 2>&1; then
+                    echo "Ansible not found. Installing..."
+                    sudo apt update
+                    sudo apt install -y ansible
+                  else
+                    echo "Ansible already installed"
+                  fi
+                '''
+            }
+        }
+
         stage('Terraform Init & Apply') {
             steps {
-                withCredentials([
-                    [$class: 'AmazonWebServicesCredentialsBinding',
-                     credentialsId: 'aws']
-                ]) {
+                withCredentials([[
+                    $class: 'AmazonWebServicesCredentialsBinding',
+                    credentialsId: 'aws'
+                ]]) {
                     sh '''
                       cd terraform
                       terraform init
@@ -32,7 +46,7 @@ pipeline {
 
         stage('Run Ansible Playbooks') {
             steps {
-                sshagent(['Master']) {
+                sshagent(['ubuntu']) {
                     sh '''
                       cd ansible
                       ansible-playbook -i inventory.ini common.yml
