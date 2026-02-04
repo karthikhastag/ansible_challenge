@@ -1,0 +1,18 @@
+- hosts: backend
+  become: true
+  tasks:
+
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+
+    - name: Install Netdata from Ubuntu repositories
+      apt:
+        name: netdata
+        state: present
+
+    - name: Ensure Netdata is running on port 19999
+      service:
+        name: netdata
+        state: started
+        enabled: true

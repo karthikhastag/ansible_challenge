@@ -1,0 +1,33 @@
+- name: Configure frontend (nginx reverse proxy)
+  hosts: frontend
+  become: yes
+
+  tasks:
+    - name: Install nginx
+      package:
+        name: nginx
+        state: present
+
+    - name: Configure nginx reverse proxy to backend Netdata
+      copy:
+        dest: /etc/nginx/conf.d/netdata.conf
+        content: |
+          server {
+            listen 80;
+            location / {
+              proxy_pass http://{{ hostvars[groups['backend'][0]].backend_ip }}:19999;
+              proxy_set_header Host $host;
+              proxy_set_header X-Real-IP $remote_addr;
+            }
+          }
+      notify: Restart nginx
+
+    - name: Test nginx configuration
+      command: nginx -t
+
+  handlers:
+    - name: Restart nginx
+      service:
+        name: nginx
+        state: restarted
+        enabled: yes
