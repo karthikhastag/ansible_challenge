@@ -46,7 +46,7 @@ pipeline {
 
         stage('Run Ansible Playbooks') {
             steps {
-                sshagent(['Master']) {
+                sshagent(['jenkins-key']) {
                     sh '''
                       cd ansible
                       ansible-playbook -i inventory.ini common.yml
